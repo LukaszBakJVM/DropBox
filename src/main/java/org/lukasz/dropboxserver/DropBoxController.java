@@ -1,11 +1,13 @@
 package org.lukasz.dropboxserver;
 
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 public class DropBoxController {
@@ -14,10 +16,26 @@ public class DropBoxController {
     public DropBoxController(DropboxServices services) {
         this.services = services;
     }
+
     @PostMapping("/upload")
-    @ResponseStatus(HttpStatus.OK)
-    String upload(@RequestParam("file") MultipartFile file){
+    @ResponseStatus(HttpStatus.CREATED)
+    String upload(@RequestParam("file") MultipartFile file) {
         services.writeFile(file);
-        return "File Saved";
+        return "File Saved " + file.getOriginalFilename();
+    }
+
+    @GetMapping("/files")
+    @ResponseStatus(HttpStatus.OK)
+    List<String> allFiles() {
+        return services.savedFiles();
+    }
+
+    @GetMapping("/file/{fileName}")
+    ResponseEntity<Resource> getFile(@PathVariable String fileName) {
+
+        Resource file = services.downloadFile(fileName);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + file.getFilename())
+                .body(file);
     }
 }

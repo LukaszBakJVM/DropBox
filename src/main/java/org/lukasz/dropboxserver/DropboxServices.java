@@ -1,27 +1,35 @@
 package org.lukasz.dropboxserver;
 
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
+import java.util.stream.Stream;
 
 @Service
 public class DropboxServices {
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private Path folderPath = Paths.get("/home/dropbox");
 
     public DropboxServices(KafkaTemplate<String, Object> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }
 
     void writeFile(MultipartFile file) {
-        Path folderPath = Paths.get("/home/dropbox/" + file.getOriginalFilename());
+        Path save = Paths.get(folderPath + "/" + file.getOriginalFilename());
+
+
         try {
-            Files.copy(file.getInputStream(), folderPath, StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(file.getInputStream(), save, StandardCopyOption.REPLACE_EXISTING);
             sendTopic(file.getOriginalFilename());
 
 
@@ -29,7 +37,26 @@ public class DropboxServices {
             throw new FileException("Internal Server Error");
         }
     }
-    private void sendTopic(String fileName){
-        kafkaTemplate.send("new_file",fileName );
+
+    private void sendTopic(String fileName) {
+        kafkaTemplate.send("new_file", fileName);
+    }
+
+    public List<String> savedFiles() {
+        try (Stream<Path> paths = Files.list(folderPath)) {
+            return paths.map(path -> path.getFileName().toString()).toList();
+        } catch (IOException e) {
+            throw new FileException("Folder not found");
+        }
+    }
+
+    Resource downloadFile(String fileName) {
+        try {
+            Path filePath = folderPath.resolve(fileName);
+            return new UrlResource(filePath.toUri());
+
+        } catch (MalformedURLException e) {
+            throw new FileException("File not found");
+        }
     }
 }
