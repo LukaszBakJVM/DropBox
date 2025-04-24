@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class ExceptionController {
     @ExceptionHandler(FileException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    Error ISE(FileException ex) {
+    Error serverError(FileException ex) {
         return new Error(HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getMessage());
     }
 }
