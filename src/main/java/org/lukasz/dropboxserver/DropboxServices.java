@@ -1,5 +1,6 @@
 package org.lukasz.dropboxserver;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -17,12 +18,15 @@ import java.util.stream.Stream;
 
 @Service
 public class DropboxServices {
+    private final Path folderPath;
     private final KafkaTemplate<String, Object> kafkaTemplate;
-    private Path folderPath = Paths.get("/home/dropbox");
 
-    public DropboxServices(KafkaTemplate<String, Object> kafkaTemplate) {
+
+    public DropboxServices(@Value("${folderPath}") String folderPath, KafkaTemplate<String, Object> kafkaTemplate) {
+        this.folderPath = Paths.get(folderPath);
         this.kafkaTemplate = kafkaTemplate;
     }
+
 
     void writeFile(MultipartFile file) {
         Path save = Paths.get(folderPath + "/" + file.getOriginalFilename());
