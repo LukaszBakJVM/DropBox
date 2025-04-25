@@ -46,9 +46,10 @@ public class DropboxServices {
         kafkaTemplate.send("new_file", fileName);
     }
 
-    public List<String> savedFiles() {
+    public AllFiles savedFiles() {
         try (Stream<Path> paths = Files.list(folderPath)) {
-            return paths.map(path -> path.getFileName().toString()).toList();
+            List<String> list = paths.map(path -> path.getFileName().toString()).toList();
+            return new AllFiles(list);
         } catch (IOException e) {
             throw new FileException("Folder not found");
         }

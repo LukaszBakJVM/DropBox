@@ -7,8 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-
 @RestController
 public class DropBoxController {
     private final DropboxServices services;
@@ -26,7 +24,7 @@ public class DropBoxController {
 
     @GetMapping("/files")
     @ResponseStatus(HttpStatus.OK)
-    List<String> allFiles() {
+    AllFiles allFiles() {
         return services.savedFiles();
     }
 
